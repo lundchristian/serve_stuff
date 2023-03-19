@@ -29,20 +29,22 @@ void *get_in_addr(struct sockaddr *sa)
 	return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
-int main(void)
+void beejs()
 {
+	char s[INET6_ADDRSTRLEN];
+	struct sigaction sa;
+    
 	int server_socket, client_socket, yes = 1;
 	struct addrinfo hints, *server_info, *server_list;
 	struct sockaddr_storage client_addr;
 	socklen_t sin_size;
-	struct sigaction sa;
-	char s[INET6_ADDRSTRLEN];
 	int status_code;
 
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE;
+
 
 	if ((status_code = getaddrinfo(NULL, PORT, &hints, &server_info)) != 0)
     {
@@ -99,6 +101,7 @@ int main(void)
 
 	printf("server: waiting for connections...\n");
 
+    /*====================================================*/
 	while(1)
     {
 		sin_size = sizeof client_addr;
@@ -123,4 +126,11 @@ int main(void)
 	}
 
 	return 0;
+}
+
+int main()
+{
+    tcp_socket t;
+    tcp_socket_ctor(&t);
+    t.setup(&t, )
 }

@@ -8,9 +8,45 @@
 </head>
 <body>
     <center>
-        <h1>index page</h1>
-        <a href="input.html">test post input</a>
-        <a href="output.html">test post outpput</a>
+        <h1>Serve Stuff Test Page</h1>
+        <br>
+        <p>This page functions as a page for testing various functionality of the Serve Stuff Framework</p>
+        <br>
+        <br>
+        <p>Test redirection to the <a href="notfound.html">not found</a> page</p>
+        <br>
+        <br>
+        <p>Test the HTTP GET method</p>
+        <form action="/index.html" method="get">
+            <button type="submit">GET</button>
+        </form>
+        <br>
+        <br>
+        <p>Test the HTTP HEAD method</p>
+        <form action="/output.html" method="head">
+            <button type="submit">HEAD</button>
+        </form>
+        <br>
+        <br>
+        <p>Test the HTTP POST method</p>
+        <form action="/output.html" method="post">
+            <div>
+                <label for="title">Title:</label>
+                <input type="text" id="title" name="note_title" />
+            </div>
+            <br>
+            <div>
+                <label for="content">Content:</label>
+                <textarea id="content" name="note_content"></textarea>
+            </div>
+            <br>
+            <div class="button">
+                <button type="submit">POST</button>
+            </div>
+            <br>
+        </form>
+        <br>
+        <p>2023 - lundchristian</p>
     </center>
 </body>
 </html>

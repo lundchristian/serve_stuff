@@ -46,7 +46,27 @@ void run_impl(serve_stuff *self)
         char* header = self->http_parser_.get_response_header(&self->http_parser_, 200, "OK", "html", file_size);
         printf("header   ============================\n%s\n", header);
 
-        if (strcmp(client_method, "POST") == 0)
+        if (strcmp(client_method, "GET") == 0)
+        {
+            file_size += 128;
+            char* response = (char*)malloc(file_size);
+            if (response == NULL) return;
+            snprintf(response, file_size, "%s%s", header, body);
+            printf("response ============================\n%s\n", response);
+
+            self->tcp_socket_.write(&self->tcp_socket_, response);
+        }
+        else if (strcmp(client_method, "HEAD") == 0)
+        {
+            file_size += 128;
+            char* response = (char*)malloc(file_size);
+            if (response == NULL) return;
+            snprintf(response, file_size, "%s", header);
+            printf("response ============================\n%s\n", response);
+
+            self->tcp_socket_.write(&self->tcp_socket_, response);
+        }
+        else if (strcmp(client_method, "POST") == 0)
         {
             char* query = self->http_parser_.get_query(&self->http_parser_, client_request);
             printf("query    ============================\n%s\n", query);
@@ -55,26 +75,6 @@ void run_impl(serve_stuff *self)
             url_decoder(decoded_query, query);
             printf("decoded query ============================\n%s\n", decoded_query);
         }
-
-        if ( (strcmp(client_method, "GET") == 0) || (strcmp(client_method, "POST") == 0) )
-        {
-            file_size += 128; /*ADD HEADER SIZE*/
-            char* response = (char*)malloc(file_size);
-            if (response == NULL) return;
-            snprintf(response, file_size, "%s%s", header, body);
-            printf("response ============================\n%s\n", response);
-
-            self->tcp_socket_.write(&self->tcp_socket_, response);
-        }
-        // else if (strcmp(client_method, "POST") == 0)
-        // {
-        //     /*
-        //     * Parse input query
-        //     * Store in database
-        //     * Populate output
-        //     * Display output
-        //     */
-        // }
 
     }
     else if (strcmp(client_filename, "") == 0)

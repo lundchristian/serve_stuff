@@ -40,6 +40,11 @@ char* get_method_impl(http_parser *self, const char* request_header)
     return http_method;
 }
 
+/*
+fix get_filename_impl so that a filename like: index.html? returns as index.html
+i.e. if there is at ? at the end of the filename, remove it
+*/
+
 char* get_filename_impl(http_parser *self, const char* request_header)
 {
     char *start = strchr(request_header, ' ');

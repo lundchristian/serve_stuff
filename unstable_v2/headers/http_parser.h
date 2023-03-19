@@ -58,6 +58,9 @@ char* get_filename_impl(http_parser *self, const char* request_header)
     char *slash_pos = strrchr(filename, '/');
     if (slash_pos != NULL) filename = slash_pos + 1;
 
+    char *question_mark_pos = strchr(filename, '?');
+    if (question_mark_pos != NULL) *question_mark_pos = '\0';
+
     return filename;
 }
 
