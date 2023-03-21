@@ -4,40 +4,31 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>index</title>
+    <title>ServeStuff</title>
 </head>
 <body>
     <center>
-        <h1>Serve Stuff Test Page</h1>
-        <br>
-        <p>This page functions as a page for testing various functionality of the Serve Stuff Framework</p>
-        <br>
+        <h1>Serve Stuff</h1>
+        <p>Serve Stuff is a framework written in C, hopefully partly complying with HTTP 1.1</p>
         <br>
         <p>Test redirection to the <a href="notfound.html">not found</a> page</p>
         <br>
-        <br>
         <p>Test the HTTP GET method</p>
-        <form action="/index.html" method="get">
-            <button type="submit">GET</button>
-        </form>
-        <br>
+        <form action="/index.html" method="get"><button type="submit">GET</button></form>
         <br>
         <p>Test the HTTP HEAD method</p>
-        <form action="/output.html" method="head">
-            <button type="submit">HEAD</button>
-        </form>
-        <br>
+        <form action="/index.html" method="head"><button type="submit">HEAD</button></form>
         <br>
         <p>Test the HTTP POST method</p>
-        <form action="/output.html" method="post">
+        <form action="/testpost" method="post">
             <div>
                 <label for="title">Title:</label>
-                <input type="text" id="title" name="note_title" />
+                <input type="text" id="title" name="user_title" />
             </div>
             <br>
             <div>
                 <label for="content">Content:</label>
-                <textarea id="content" name="note_content"></textarea>
+                <textarea id="content" name="user_content"></textarea>
             </div>
             <br>
             <div class="button">

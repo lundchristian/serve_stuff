@@ -29,14 +29,19 @@ struct tcp_socket {
     struct addrinfo *server_list;
 	struct sockaddr_storage client_addr;
 
-    void (*create)(tcp_socket*);
-    void (*listen)(tcp_socket*);
-    void (*accept)(tcp_socket*);
+    void (*create)(tcp_socket *self);
+    void (*listen)(tcp_socket *self);
+    void (*accept)(tcp_socket *self);
 
-    char* (*read)(tcp_socket*);
-    void (*write)(tcp_socket*, const char*);
+    char* (*read)(tcp_socket *self);
+    void (*write)(tcp_socket *self, const char *message);
 };
 
+/* Method: create_socket
+* Argument(self): Pointer to the struct object to access members 
+* Brief: Creates and binds a new base socket from a list of alternatives
+* Return: void
+*/
 void create_socket(tcp_socket *self)
 {
     if (getaddrinfo(NULL, self->port, &self->address_info, &self->server_info) != 0)
@@ -52,12 +57,14 @@ void create_socket(tcp_socket *self)
 			perror("socket() failed");
 			continue;
 		}
+        else printf("[+] Socket created\n");
+
 
         int yes = 1;
 		if (setsockopt(self->base_socket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1)
         {
 			perror("setsockopt() failed");
-			exit(1);
+			exit(EXIT_FAILURE);
 		}
 
 		if (bind(self->base_socket, self->server_list->ai_addr, self->server_list->ai_addrlen) == -1)
@@ -74,10 +81,16 @@ void create_socket(tcp_socket *self)
     if (self->server_list == NULL)
     {
 		perror("bind() failed");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
+    else printf("[+] Socket bound\n");
 }
 
+/* Method: listen_socket
+* Argument(self): Pointer to the struct object to access members 
+* Brief: Listens for new socket connections
+* Return: void
+*/
 void listen_socket(tcp_socket *self)
 {
     int status = listen(self->base_socket, self->backlog);
@@ -85,11 +98,16 @@ void listen_socket(tcp_socket *self)
     if (status == -1)
     {
         perror("listen() failed");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     else printf("[+] Socket listening\n");
 }
 
+/* Method: accept_socket
+* Argument(self): Pointer to the struct object to access members 
+* Brief: Accepts new socket connections
+* Return: void
+*/
 void accept_socket(tcp_socket *self)
 {
     self->new_socket = accept(self->base_socket, (struct sockaddr*)&self->client_addr, &self->address_size);
@@ -97,22 +115,34 @@ void accept_socket(tcp_socket *self)
     if (self->new_socket == -1)
     {
         perror("accept() failed");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     else printf("[+] Socket accepted\n");
 }
 
+/* Method: read_tcp
+* Argument(self): Pointer to the struct object to access members 
+* Brief: Reads from the newly accepted socket connection, and returns the message
+* Return: char*
+* Note: User must free memory allocated
+*/
 char* read_tcp(tcp_socket *self)
 {
-    char* buffer = (char*)malloc(READ_BUFFER * sizeof(char));
-    if (buffer == NULL) return NULL;
+    char* buffer = (char*)calloc(READ_BUFFER, sizeof(char*));
+    if (buffer == NULL)
+    {
+        perror("calloc() failed");
+        return NULL;
+    }
 
-    int bytes_read = read(self->new_socket, buffer, READ_BUFFER);
+    int bytes_read = recv(self->new_socket, buffer, READ_BUFFER, 0);
     if (bytes_read == -1)
     { 
         if (errno == EAGAIN || errno == EINTR)
         {
+            perror("recv() failed");
             free(buffer);
+            close(self->new_socket);
             return NULL;
         }
     }
@@ -122,7 +152,14 @@ char* read_tcp(tcp_socket *self)
     return buffer;
 }
 
-void write_tcp(tcp_socket *self, const char* message)
+/* Method: write_tcp
+* Argument(self): Pointer to the struct object to access members 
+* Argument(message): Chars to send to the accepted socket 
+* Brief: Writes to the newly accepted socket connection, and closes the connection
+* Return: void
+* Note: User must free memory allocated
+*/
+void write_tcp(tcp_socket *self, const char *message)
 {
     size_t message_len = strlen(message);
     int bytes_wrote = write(self->new_socket, message, message_len);
@@ -131,16 +168,33 @@ void write_tcp(tcp_socket *self, const char* message)
         if (errno == EAGAIN || errno == EINTR)
         {
             perror("write() failed");
+            close(self->new_socket);
             return;
         }
     }
 
     close(self->new_socket);
+    printf("[+] Socket removed\n");
 }
 
-void tcp_socket_ctor(tcp_socket *self, char* port, int backlog)
+/* Method: tcp_socket_ctor
+* Argument(self): Pointer to the struct object to access members 
+* Argument(port): Name of the port to use, ex. "8080"
+* Argument(backlog): The backlog of the socket, ex. 10
+* Brief: Inits the TCP server by setting port, backlog and IP
+* Return: void
+*/
+void tcp_socket_ctor(tcp_socket *self, const char *port, int backlog)
 {
-    self->port = port;
+    size_t port_len = strlen(port);
+    self->port = (char*)calloc(port_len + 1, sizeof(char*));
+    if (self->port == NULL)
+    {
+        perror("calloc() failed");
+        return;
+    }
+    strcpy(self->port, port);
+
     self->new_socket = 0;
     self->base_socket = 0;
     self->backlog = backlog;
@@ -159,11 +213,22 @@ void tcp_socket_ctor(tcp_socket *self, char* port, int backlog)
     self->write = write_tcp;
 }
 
+/* Method: tcp_socket_dtor
+* Argument(self): Pointer to the struct object to access members
+* Brief: Frees the possible memory and closes the base socket
+* Return: void
+*/
 void tcp_socket_dtor(tcp_socket *self)
 {
+    free(self->port);
     close(self->base_socket);
 }
 
+/* Method: get_conn_address
+* Argument(sock_addr): Pointer to the struct object to access members
+* Brief: Wrapper to get address of connecting socket
+* Return: void*
+*/
 void *get_conn_address(struct sockaddr *sock_addr)
 {
 	if (sock_addr->sa_family == AF_INET) return &(((struct sockaddr_in*)sock_addr)->sin_addr);

@@ -131,144 +131,24 @@ void data_model_dtor(data_model *self)
     free(self->file_name);
 }
 
-/*
-Implement html_inject in C
-
-Input example:
-file_path => output.html
-key_val_str => name=Christian Lund&age=25&mail=lundchristian@me.com  (info: key=val&...)
-
-Requirements
-1. Open file_path file
-2. Search for {{ key }}
-3. If {{ key }} == key => replace {{ key }} with val
-
-Example (before)
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>output</title>
-</head>
-<body>
-    <center>
-        <p>{{name}}</p>
-    </center>
-</body>
-</html>
-
-Example (after)
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>output</title>
-</head>
-<body>
-    <center>
-        <p>Christian Lund</p>
-    </center>
-</body>
-</html>
-
-*/
-
-void html_inject(const char* file_path, const char* key_val_str)
+void run_test()
 {
-    // Open the input file for reading
-    FILE* in_file = fopen(file_path, "r");
-    if (in_file == NULL) {
-        printf("Error: could not open file %s\n", file_path);
-        return;
-    }
+    const char* note_query_1 = "note_title=Shopping+List&note_content=Agurk%2C+Tandkrem%2C+Mer";
+    const char* note_query_2 = "note_title=Todo&note_content=Løpe%2C+Hoppe%2C+Vaske%2C+Drikke";
 
-    // Read the contents of the file into a buffer
-    fseek(in_file, 0, SEEK_END);
-    long file_size = ftell(in_file);
-    rewind(in_file);
-    char* file_contents = (char*)malloc(file_size + 1);
-    fread(file_contents, 1, file_size, in_file);
-    file_contents[file_size] = '\0';
-    fclose(in_file);
+    const char* person_query_1 = "name=Christian+Lund&age=25&mail=lundchristian%40me.com";
+    const char* person_query_2 = "name=Mons+Bal&age=1&mail=monsobal%40dog.com";
 
-    // Split the key/value string into individual pairs
-    char* pair;
-    char* pairs = strdup(key_val_str);
-    char* saveptr;
-    while ((pair = strtok_r(pairs, "&", &saveptr)))
-    {
-        pairs = NULL;
-        char* key;
-        char* value;
-        key = strtok(pair, "=");
-        value = strtok(NULL, "=");
+    const char* car_query_1 = "color=Blue&top_speed=350&tyres=Michelin&price=4500000";
+    const char* car_query_2 = "color=Red&top_speed=100&tyres=F1&price=25999";
+    // char* note_query_1_decoded = (char*)malloc(strlen(note_query_1) + 1);
+    // char* note_query_2_decoded = (char*)malloc(strlen(note_query_2) + 1);
 
-        // Replace all instances of the key in the file with the value
-        char* match;
-        char* file_copy = strdup(file_contents);
-        while ((match = strstr(file_copy, "{{")))
-        {
-            char* end_match = strstr(match, "}}");
-            if (end_match == NULL)
-            {
-                break;
-            }
-            int key_len = end_match - match - 2;
-            if (strncmp(match + 2, key, key_len) == 0)
-            {
-                // Replace the key with the value
-                int value_len = strlen(value);
-                int new_file_size = file_size - key_len + value_len;
-                char* new_file_contents = (char*)malloc(new_file_size + 1);
-                strncpy(new_file_contents, file_contents, match - file_copy);
-                new_file_contents[match - file_copy] = '\0';
-                strcat(new_file_contents, value);
-                strcat(new_file_contents, end_match + 2);
-                strcpy(file_contents, new_file_contents);
-                file_size = new_file_size;
-                free(new_file_contents);
-            }
-            file_copy = end_match + 2;
-        }
-        free(file_copy);
-    }
-    free(pairs);
+    // char* person_query_1_decoded = (char*)malloc(strlen(person_query_1) + 1);
+    // char* person_query_2_decoded = (char*)malloc(strlen(person_query_2) + 1);
 
-    // Write the modified contents of the file back to disk
-    FILE* out_file = fopen(file_path, "w");
-    fwrite(file_contents, 1, file_size, out_file);
-    fclose(out_file);
-    free(file_contents);
-}
-
-
-const char* note_query_1 = "note_title=Shopping+List&note_content=Agurk%2C+Tandkrem%2C+Mer";
-const char* note_query_2 = "note_title=Todo&note_content=Løpe%2C+Hoppe%2C+Vaske%2C+Drikke";
-
-const char* person_query_1 = "name=Christian+Lund&age=25&mail=lundchristian%40me.com";
-const char* person_query_2 = "name=Mons+Bal&age=1&mail=monsobal%40dog.com";
-
-const char* car_query_1 = "color=Blue&top_speed=350&tyres=Michelin&price=4500000";
-const char* car_query_2 = "color=Red&top_speed=100&tyres=F1&price=25999";
-
-int main()
-{
-    char* note_query_1_decoded = (char*)malloc(strlen(note_query_1) + 1);
-    char* note_query_2_decoded = (char*)malloc(strlen(note_query_2) + 1);
-
-    char* person_query_1_decoded = (char*)malloc(strlen(person_query_1) + 1);
-    char* person_query_2_decoded = (char*)malloc(strlen(person_query_2) + 1);
-
-    char* car_query_1_decoded = (char*)malloc(strlen(car_query_1) + 1);
-    char* car_query_2_decoded = (char*)malloc(strlen(car_query_2) + 1);
-
-    html_inject("output.html", person_query_1_decoded);
+    // char* car_query_1_decoded = (char*)malloc(strlen(car_query_1) + 1);
+    // char* car_query_2_decoded = (char*)malloc(strlen(car_query_2) + 1);
 
     // url_decoder(note_query_1_decoded, note_query_1);
     // printf("Decoded\n%s\n", note_query_1_decoded);
@@ -305,4 +185,116 @@ int main()
     // printf("Fetched\n%s\n", person_1);
     // char* car_1 = db_car.fetch(&db_car, 1);
     // printf("Fetched\n%s\n", car_1);
+}
+
+
+
+    /*Open file from file_path*/
+    /*Look for handle: {{}}*/
+    /*Compare content of handle with key from key_val*/
+    /*If the content == key => inject val*/
+    /*Else inject not found*/
+    /*Return file content*/
+
+    /* Example
+    1. call handle_inject("output.html", "id=2&name=Mons Bal&age=1&mail=monsobal@dog.com")
+    2. Open output.html
+
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>output</title>
+    </head>
+    <body>
+        <center>
+            <p>{{name}}</p>
+        </center>
+    </body>
+    </html>
+
+    3. Replace handle
+
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>output</title>
+    </head>
+    <body>
+        <center>
+            <p>Mons Bal</p>
+        </center>
+    </body>
+    </html>
+
+    4. Return file content
+    */
+char* handle_inject(const char* file_content, const char* key_val)
+{
+    char* handle_start = strstr(file_content, "{{");
+    handle_start += 2;
+    char* handle_end = strstr(handle_start, "}}");
+    if (handle_start == 0 || handle_end == 0)
+    {
+        printf("Error: Handle not found");
+        exit(1);
+    }
+
+    size_t len = handle_end - handle_start;
+    char* html_key = (char*)malloc(len + 1);
+    if (html_key == NULL) return NULL;
+    strncpy(html_key, handle_start, len);
+    html_key[len] = '\0';
+
+    char* str_key = strstr(key_val, html_key);
+    if (str_key == 0)
+    {
+        printf("Error: Key not found");
+        exit(1);
+    }
+
+    str_key += len + 1;
+    char* str_val = strstr(str_key, "&");
+
+    size_t len_val = str_val - str_key;
+    char* replace = (char*)malloc(len_val + 1);
+    if (replace == NULL) return NULL;
+    strncpy(replace, str_key, len_val);
+    replace[len_val] = '\0';
+
+    size_t output_len = strlen(file_content) - len - 4 + strlen(replace);
+    char* output_content = (char*)malloc(output_len + 1);
+
+    return replace;
+}
+
+void test_handle_inject()
+{
+    const char* file_content = 
+                            "<!DOCTYPE html>"
+                            "<html lang=\"en\">"
+                            "<head>"
+                                "<meta charset=\"UTF-8\">"
+                                "<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">"
+                                "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"
+                                "<title>output</title>"
+                            "</head>"
+                            "<body>"
+                                "<center>"
+                                    "<p>{{name}}</p>"
+                                "</center>"
+                            "</body>"
+                            "</html>";
+    const char* key_val = "id=2&name=Mons Bal&age=1&mail=monsobal@dog.com";
+    printf("%s\n", handle_inject(file_content, key_val));
+}
+
+int main()
+{
+    test_handle_inject();
 }

@@ -7,8 +7,8 @@
 void test_tcp_socket()
 {
     tcp_socket connection;
-    tcp_socket_ctor(&connection, 9000, 10);
-    connection.setup(&connection);
+    tcp_socket_ctor(&connection, "8080", 10);
+    connection.create(&connection);
     connection.accept(&connection);
     printf("test tcp_socket\n%s\n", connection.read(&connection));
     tcp_socket_dtor(&connection);
@@ -19,7 +19,8 @@ void test_http_parser()
     const char* req =
         "GET /more/nyhos.html HTTP/1.1\r\n"
         "Content-type: text/html, text/plain\r\n"
-        "Other-stuff: More fillers\r\n";
+        "Other-stuff: More fillers\r\n\r\n"
+        "title=hello+world&content=just+a+story\r\n";
 
     http_parser par;
     http_parser_ctor(&par);
@@ -30,13 +31,13 @@ void test_http_parser()
     char* filename = par.get_filename(&par, req);
     printf("test get_filename\n%s\n", filename);
 
+    char* query = par.get_query(&par, req);
+    printf("test get_query\n%s\n", query);
+
     char* response = par.get_response_header(&par, 200, "OK", "html", 128);
     printf("test get_response\n%s\n", response);
 
     http_parser_dtor(&par);
-    free(method);
-    free(filename);
-    free(response);
 }
 
 void test_file_generator()
@@ -54,18 +55,15 @@ void test_file_generator()
 void test_serve_stuff()
 {
     serve_stuff app;
-    serve_stuff_ctor(&app, 8080, 10, "templates");
+    serve_stuff_ctor(&app, "8080", 5, "templates", "index.html", "notfound.html");
     while (1)
     {
-        app.run(&app);
+        app.serve_client(&app);
     }
     serve_stuff_dtor(&app);
 }
 
 int main()
 {
-    // test_tcp_socket();
-    test_serve_stuff();
-    // test_http_parser();
-    // test_file_generator();
+    test_file_generator();
 }
