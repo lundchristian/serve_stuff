@@ -19,8 +19,8 @@ Simple web server written from scratch according to the MVP principle.
 
 1. Download the _src_ and place it in a directory of your choice
 2. Change current directory to _src_ in the command line
-3. Run the command: _make_
-4. Run the command: ./app <port> (try port=8080 if in doubt)
+3. Run the command: make
+4. Run the command: ./app port (try port=8080 if in doubt)
 5. Search for 127.0.0.1:<port> in your preferred browser
 6. Do stuff until it breaks!
 
